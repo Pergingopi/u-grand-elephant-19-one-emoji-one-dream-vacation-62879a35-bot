@@ -124,9 +124,18 @@ def main():
                 pass
             if attempt == 1:
                 raise
-    os.chmod(tmp, 0o644)
-    os.replace(tmp, final)
-    os.chmod(final, 0o644)
+    # Finalize: if chmod/replace fails after a good write, remove the
+    # temp so no stale .entry.txt.tmp survives in the output dir.
+    try:
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, final)
+        os.chmod(final, 0o644)
+    except OSError:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
 
 
 if __name__ == "__main__":
